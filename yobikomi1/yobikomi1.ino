@@ -1,7 +1,7 @@
 const int ECHO=2;
 const int TRIG=3;
 int duration;
-const int YOBIKOMI=9;
+const int YOASOBI=9;
 int judgeCount=0;
 
 void setup() {
@@ -9,10 +9,10 @@ void setup() {
   Serial.begin(9600);
   pinMode(ECHO,INPUT);
   pinMode(TRIG,OUTPUT);
-  pinMode(YOBIKOMI,OUTPUT);
-  digitalWrite(YOBIKOMI,HIGH);
+  pinMode(YOASOBI,OUTPUT);
+  digitalWrite(YOASOBI,HIGH);
   delay(20*1000);
-  digitalWrite(YOBIKOMI,LOW);
+  digitalWrite(YOASOBI,LOW);
 }
 
 int getDuration(){
@@ -32,18 +32,18 @@ void loop() {
     judgeCount++;
     if(judgeCount>=5){
       judgeCount=0;
-      digitalWrite(YOBIKOMI,HIGH);
+      digitalWrite(YOASOBI,HIGH);
       delay(15000);
       int d=getDuration();
       if(d<5000&&0<d)
-        digitalWrite(YOBIKOMI,LOW);
+        digitalWrite(YOASOBI,LOW);
        else
         delay(5*1000);
     }
     
   }else{
     judgeCount=0;
-    digitalWrite(YOBIKOMI,LOW);
+    digitalWrite(YOASOBI,LOW);
   }
     
 }
