@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Web Bluetooth機能で傾き(加速度)を取得する</title>
+<script>
+ 
+var targetDevice;
+ 
+//////////////////////////////////////////////////
+/// 接続
+//////////////////////////////////////////////////
+function getAccelerometer() {
+ 
+  //////////////////////////////////////////////////
+  /// 定数の定義
+  //////////////////////////////////////////////////
+  /// UUID
+  const UUID_ACCELEROMETER_SERVICE = 'e95d0753-251d-470a-a062-fa1922dfa9a8'
+  const UUID_ACCELEROMETER_SERVICE_CHARACTERISTIC_DATA   = 'e95dca4b-251d-470a-a062-fa1922dfa9a8'
+  const UUID_ACCELEROMETER_SERVICE_CHARACTERISTIC_PERIOD = 'e95dfb24-251d-470a-a062-fa1922dfa9a8'
+ 
+  /// 取得間隔(ミリ秒)
+  const INTERVAL = 1000
+ 
+  //////////////////////////////////////////////////
+  /// デバイスのスキャン
+  //////////////////////////////////////////////////
+  navigator.bluetooth.requestDevice({
+    filters: [
+      { namePrefix: "BBC micro:bit" }
+    ],
+    optionalServices: [UUID_ACCELEROMETER_SERVICE]
+  })
+  //////////////////////////////////////////////////
+  /// GATT接続
+  //////////////////////////////////////////////////
+  .then(device => {
+    targetDevice = device;
+    console.log("device", device);
+    return device.gatt.connect();
+  })
+  //////////////////////////////////////////////////
+  /// プライマリーサービスの取得
+  //////////////////////////////////////////////////
+    .then(server => {
+    console.log('server', server);
+    server.getPrimaryService(UUID_ACCELEROMETER_SERVICE)
+    //////////////////////////////////////////////////
+    /// 傾き(加速度)の取得
+    //////////////////////////////////////////////////
+    .then(service => {
+      /// 傾き(加速度)の取得間隔の設定
+      service.getCharacteristic(UUID_ACCELEROMETER_SERVICE_CHARACTERISTIC_PERIOD)
+      .then(characteristic => {
+        characteristic.writeValue(new Uint16Array([INTERVAL]));
+      })
+      .catch(error => {
+        console.log(error);
+        alert('取得間隔の設定に失敗しました。');
+      })
+ 
+      /// 傾き(加速度)の取得開始
+      service.getCharacteristic(UUID_ACCELEROMETER_SERVICE_CHARACTERISTIC_DATA)
+      .then(characteristic => {
+        characteristic.startNotifications()
+        .then(char => {
+          alert('接続しました。');
+          characteristic.addEventListener('characteristicvaluechanged',onAccelerometerChanged);
+          console.log('Accelerometer : ', char);
+        })
+      })
+      .catch(error => {
+        console.log(error);
+        alert('取得開始に失敗しました。');
+      })
+    })
+  })
+  .catch(error => {
+    console.log(error);
+    alert('接続に失敗しました。');
+  });
+ 
+  //////////////////////////////////////////////////
+  /// 傾き(加速度)の表示
+  //////////////////////////////////////////////////
+  function onAccelerometerChanged (event) {
+    let accelerometer_x = event.target.value.getInt16(0, true);
+    let accelerometer_y = event.target.value.getInt16(2, true);
+    let accelerometer_z = event.target.value.getInt16(4, true);
+    console.log('傾き(加速度) X: ' + accelerometer_x + ' Y: ' + accelerometer_y +' Z: ' + accelerometer_z);
+    document.getElementById("accelerometer").innerText = ' X: ' + accelerometer_x + ' Y: ' + accelerometer_y +' Z: ' + accelerometer_z ;
+
+    //////////////////////////////////////////////////
+    /// 上を向いた時だけ画面に何かを表示させる
+    //////////////////////////////////////////////////
+    if(accelerometer_x > 700){ // どれくらい傾いたら上を向いたと判断するかを指定
+
+        //////////////////////////////////////////////////
+        /// 上を向いた回数を画像で累積表示
+        //////////////////////////////////////////////////
+        let addimg = document.getElementById("showimg").innerHTML ;
+        document.getElementById("showimg").innerHTML = addimg + "<img src ='../img/lookup.png'>";
+
+        //////////////////////////////////////////////////
+        /// 上を向いた日時を追記していく表示
+        //////////////////////////////////////////////////
+        let lookupText = document.getElementById("lookup").innerText ;
+        let youbi = ["日","月","火","水","木","金","土"];
+        let fullDate = new Date();
+        let dateTime = fullDate.getFullYear() + "年" + 
+			(fullDate.getMonth() + 1)  + "月" + 
+			fullDate.getDate() + "日　" + 
+			fullDate.getHours() + "時" + 
+			fullDate.getMinutes() + "分" + 
+			fullDate.getSeconds() + "秒" +
+                        fullDate.getMilliseconds() + "ミリ秒　" + 
+			youbi[fullDate.getDay()] + "曜日" ; // 0は日曜日～6は土曜日;
+        document.getElementById("lookup").innerText = lookupText + ' 上を見た！ ' + dateTime + '\n';
+    }
+  }
+}
+
+//////////////////////////////////////////////////
+/// 切断
+//////////////////////////////////////////////////
+function disconnect() {
+ 
+  if (!targetDevice || !targetDevice.gatt.connected){
+    return;
+  }
+  targetDevice.gatt.disconnect();
+  document.getElementById("showimg").innerHTML = '' ;
+  document.getElementById("accelerometer").innerText = 'micro:bitと接続して、傾き(加速度)を取得してください。' ;
+  document.getElementById("lookup").innerText = '' ;
+  alert("切断しました。");
+ 
+}
+ 
+</script>
+</head>
+
+<body>
+<div id="BLE_accelerometer">
+  <div id="BLE_title">
+    <h3>Web Bluetooth機能で傾き(加速度)を取得する</h3>
+  </div>
+  <div id="BLE_button">
+    <input type="button" value="micro:bitと接続する" onclick="getAccelerometer();"/> 
+    <input type="button" value="切断する" onclick="disconnect();"/> 
+  </div>
+  <div id="showimg"></div>
+  <div id="BLE_display">
+    <p>傾き(加速度)：<span id="accelerometer">micro:bitと接続して、傾き(加速度)を取得してください。</span></p>
+    <p><span id="lookup"></span></p>
+  <div>
+</div>
+</body>
+</html>
