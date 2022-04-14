@@ -2,25 +2,23 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>Web Bluetooth API のテスト</title>
+<title>コントローラー</title>
 </head>
 
 <body>
 <button id="connect">接続</button>
 <button id="disconnect">切断</button>
 
-<table id="controller" style="display: none;">
+<table>
   <tr>
-    <td><button onclick="toggleMotor(1,1);">left front</button></td>
-    <td><button onclick="toggleMotor(0,1);">right front</button></td>
+    <td></td>
+    <td></td>
+    <td></td>
   </tr>
   <tr>
-    <td><button onclick="stopMotor(1);">left stop</button></td>
-    <td><button onclick="stopMotor(0);">right stop</button></td>
-  </tr>
-  <tr>
-    <td><button onclick="toggleMotor(1,0);">left back</button></td>
-    <td><button onclick="toggleMotor(0,0);">right back</button></td>
+    <td></td>
+    <td></td>
+    <td></td>
   </tr>
 </table>
 
@@ -94,18 +92,22 @@ function toggleMotor(isLeft,isFront){
   })});;
   
 }
+
+
+onkeydown=(e)=>{
+  if(e.key=='w'){
+    toggleMotor(true,true).then(()=>{toggleMotor(false,true)});
+  } else if(e.key=='s'){
+    toggleMotor(true,false).then(()=>{toggleMotor(false,false)});
+  } else if(e.key=='a'){
+    stopMotor(1).then(()=>{toggleMotor(false,true);});
+  }else if(e.key=='d'){
+    stopMotor(0).then(()=>{toggleMotor(true,true);});
+  }else if(e.key=='e'){
+    stopMotor(0).then(()=>{stopMotor(1);});
+  }
+}
+
 </script>
-<style>
-  button{
-    border:0.5px solid #808080;
-    background-color: white;
-    transition: .2s;
-    border-radius: 3px;
-  }
-  button:hover{
-    background-color: purple;
-    color: white;
-  }
-</style>
 </body>
 </html>
